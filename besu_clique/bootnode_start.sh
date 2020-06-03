@@ -10,7 +10,7 @@
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
 # an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
-node_id=`hostname`
+node_id=`ft-besuchain-bootnode`
 
 PUBLIC_KEYS_DIR=${BESU_PUBLIC_KEY_DIRECTORY:=/opt/besu/public-keys/}
 GENESIS_FILE_DIR=${BESU_GENESIS_FILE_DIRECTORY:=/opt/besu/genesis/}
@@ -24,7 +24,7 @@ PUBLIC_KEY_FILE_BY_ID="${PUBLIC_KEYS_DIR}${node_id}_pubkey"
 PUBLIC_ADDRESS_FILE_BY_ID="${PUBLIC_KEYS_DIR}${node_id}_address"
 
 
-GENESIS_TEMPLATE_FILE=${DATA_DIR}genesis.json.template
+GENESIS_TEMPLATE_FILE=${DATA_DIR}genesis.json
 GENESIS_FILE=${GENESIS_FILE_DIR}genesis.json
 
 # write pub key for making other nodes able to connect to bootnode
@@ -38,10 +38,6 @@ cp ${PUBLIC_ADDRESS_FILE} ${PUBLIC_ADDRESS_FILE_BY_ID}
 
 # remove database as exporting public keys init the db but we don't have the right genesis yet
 rm -Rf ${DATA_DIR}/database
-
-# replace placeholder by address in genesis
-sedCommand="s/<EXTRA_DATA_ADDRESSES>/${bootnode_address}/g"
-sed ${sedCommand} ${GENESIS_TEMPLATE_FILE} > ${GENESIS_FILE}
 
 # run bootnode with discovery but no bootnodes as it's our bootnode.
 ${BESU_BINARY} --genesis-file="${GENESIS_FILE}"

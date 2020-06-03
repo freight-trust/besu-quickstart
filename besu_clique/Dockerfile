@@ -7,8 +7,8 @@ ENV BESU_OPTS=''
 
 # Copy new entrypoint scripts
 COPY *_start.sh /opt/besu/
-# Copy genesis template
-COPY genesis.json.template /var/lib/besu/
+# Copy genesis file
+COPY genesis.json /var/lib/besu/
 
 # Install a dos 2 unix EOL converter (supporting either alpine or ubuntu images)
 RUN (apt-get update && apt-get install dos2unix || apk add --update dos2unix) && \
