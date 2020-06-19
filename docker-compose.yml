@@ -7,73 +7,67 @@ services:
       context: besu/.
       args:
         BESU_VERSION: ${BESU_VERSION}
-    image: quickstart/besu:${BESU_VERSION}
+    image: sample-network/besu:${BESU_VERSION}
     environment:
       - BESU_PUBLIC_KEY_DIRECTORY=${BESU_PUBLIC_KEY_DIRECTORY}
-    entrypoint: /opt/besu/bootnode_start.sh --network=dev --metrics-enabled --metrics-host=0.0.0.0 --metrics-port=9545 --host-whitelist=*
+    entrypoint: /opt/besu/bootnode_start.sh --network=dev --config-file=/config/config.toml --min-gas-price=0
     volumes:
       - public-keys:${BESU_PUBLIC_KEY_DIRECTORY}
+      - ./config/besu/config.toml:/config/config.toml
+    ports:
+      - 30303:30303/tcp
+      - 30303:30303/udp
 
   minernode:
-    image: quickstart/besu:${BESU_VERSION}
+    image: sample-network/besu:${BESU_VERSION}
     environment:
       - BESU_PUBLIC_KEY_DIRECTORY=${BESU_PUBLIC_KEY_DIRECTORY}
-    command: ["--network=dev",
-              "--miner-enabled",
-              "--metrics-enabled",
-              "--metrics-host=0.0.0.0",
-              "--metrics-port=9545",
-              "--miner-coinbase=${MINER_COINBASE}",
-              "--host-whitelist=*"]
+    command: [
+      "--config-file=/config/config.toml",
+      "--network=dev",
+      "--miner-enabled=true",
+      "--miner-coinbase=${MINER_COINBASE}"]
     volumes:
       - public-keys:${BESU_PUBLIC_KEY_DIRECTORY}
+      - ./config/besu/config.toml:/config/config.toml
     depends_on:
       - bootnode
 
   node:
-    image: quickstart/besu:${BESU_VERSION}
+    image: sample-network/besu:${BESU_VERSION}
     environment:
       - BESU_PUBLIC_KEY_DIRECTORY=${BESU_PUBLIC_KEY_DIRECTORY}
-    command: ["--network=dev",
-              "--metrics-enabled",
-              "--metrics-host=0.0.0.0",
-              "--metrics-port=9545",
-              "--host-whitelist=*"]
+    command: [
+      "--config-file=/config/config.toml",
+      "--network=dev"]
     volumes:
       - public-keys:${BESU_PUBLIC_KEY_DIRECTORY}
+      - ./config/besu/config.toml:/config/config.toml
     depends_on:
       - bootnode
 
   rpcnode:
-    image: quickstart/besu:${BESU_VERSION}
-    command: ["--network=dev",
-              "--rpc-http-enabled",
-              "--rpc-http-host=0.0.0.0",
-              "--rpc-http-port=8545",
-              "--rpc-http-cors-origins=*",
-              "--rpc-ws-enabled",
-              "--rpc-ws-host=0.0.0.0",
-              "--rpc-ws-port=8546",
-              "--metrics-enabled",
-              "--metrics-host=0.0.0.0",
-              "--metrics-port=9545",
-              "--graphql-http-enabled",
-              "--graphql-http-host=0.0.0.0",
-              "--graphql-http-port=8547",
-              "--graphql-http-cors-origins=*",
-              "--host-whitelist=*"]
+    image: sample-network/besu:${BESU_VERSION}
+    environment:
+      - BESU_PUBLIC_KEY_DIRECTORY=${BESU_PUBLIC_KEY_DIRECTORY}
+    command: [
+      "--config-file=/config/config.toml",
+      "--network=dev"]
     volumes:
       - public-keys:${BESU_PUBLIC_KEY_DIRECTORY}
+      - ./config/besu/config.toml:/config/config.toml
     depends_on:
       - bootnode
+    ports:
+      - 8545:8545/tcp
 
   explorer:
     build: block-explorer-light/.
-    image: "quickstart/block-explorer-light:${BESU_VERSION}"
+    image: "sample-network/block-explorer-light:${BESU_VERSION}"
     depends_on:
       - rpcnode
     ports:
-      - "${EXPLORER_PORT_MAPPING:-0}:80"
+      - 25000:80/tcp
 
   prometheus:
     image: "prom/prometheus"
@@ -82,18 +76,18 @@ services:
       - prometheus:/prometheus
     command:
       - --config.file=/etc/prometheus/prometheus.yml
-      - --web.external-url=http://localhost:9090/prometheus
-      - --web.route-prefix=/prometheus
+    ports:
+      - 9090:9090/tcp
 
   grafana:
     image: "grafana/grafana"
     environment:
-      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana
       - GF_AUTH_ANONYMOUS_ENABLED=true
     volumes:
       - ./monitoring/grafana/provisioning/:/etc/grafana/provisioning/
       - grafana:/var/lib/grafana
-
+    ports:
+      - 3000:3000/tcp
 
 volumes:
   public-keys:
@@ -101,4 +95,3 @@ volumes:
   prometheus:
 
   grafana:
-

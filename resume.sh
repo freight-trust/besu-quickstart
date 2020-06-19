@@ -18,9 +18,9 @@ NO_LOCK_REQUIRED=false
 
 
 echo "${bold}*************************************"
-echo "Besu Quickstart ${version}"
+echo "Sample Network for Besu at ${version}"
 echo "*************************************${normal}"
-echo "Resume network"
+echo "Resuming network..."
 echo "----------------------------------"
 
 docker-compose ${composeFile} start
